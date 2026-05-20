@@ -1,97 +1,99 @@
-# OpenClaw Full — расширенный Docker-образ
+# OpenClaw Full — Extended Docker Image
 
-Кастомный Docker-образ на базе [ghcr.io/openclaw/openclaw](https://github.com/openclaw/openclaw/pkgs/container/openclaw) с дополнительными системными утилитами для диагностики, автоматизации и управления серверами.
+A custom Docker image based on [ghcr.io/openclaw/openclaw](https://github.com/openclaw/openclaw/pkgs/container/openclaw) with additional system utilities for server diagnostics, automation, and management.
 
-Образ публикуется в GitHub Container Registry: `ghcr.io/sers88/openclawfull`
+Published on GitHub Container Registry: `ghcr.io/sers88/openclawfull`
+
+[README на русском](README.ru.md)
 
 ---
 
-## Состав пакета
+## Included Packages
 
-### Базовые (уже в стандартном образе openclaw)
+### Base (already in the standard openclaw image)
 
-| Пакет | Назначение |
-|-------|-----------|
-| `ca-certificates` | SSL/TLS сертификаты |
-| `curl` | HTTP-клиент |
-| `git` | Контроль версий |
-| `openssl` | Криптография, сертификаты |
+| Package | Purpose |
+|---------|---------|
+| `ca-certificates` | SSL/TLS certificates |
+| `curl` | HTTP client |
+| `git` | Version control |
+| `openssl` | Cryptography, certificates |
 | `procps` | `ps`, `top`, `free`, `kill` |
-| `lsof` | Список открытых файлов |
+| `lsof` | List open files |
 | `python3` | Python runtime |
-| `tini` | Init-система для контейнеров |
-| `less`, `file`, `tar` | Базовые утилиты |
+| `tini` | Init system for containers |
+| `less`, `file`, `tar` | Basic utilities |
 
-### SSH и передача файлов
+### SSH & File Transfer
 
-| Пакет | Назначение |
-|-------|-----------|
-| `openssh-client` | SSH-клиент (`ssh`, `scp`, `ssh-keygen`) |
-| `rsync` | Синхронизация файлов между серверами |
-| `paramiko` (pip) | SSH через Python |
+| Package | Purpose |
+|---------|---------|
+| `openssh-client` | SSH client (`ssh`, `scp`, `ssh-keygen`) |
+| `rsync` | File synchronization between servers |
+| `paramiko` (pip) | SSH via Python |
 
-### Сетевая диагностика
+### Network Diagnostics
 
-| Пакет | Назначение |
-|-------|-----------|
+| Package | Purpose |
+|---------|---------|
 | `iputils-ping` | `ping` |
-| `netcat-openbsd` | `nc` — проверка портов |
-| `nmap` | Сканер сети |
+| `netcat-openbsd` | `nc` — port checking |
+| `nmap` | Network scanner |
 | `dnsutils` | `dig`, `nslookup`, `host` |
 | `iproute2` | `ip`, `ss`, `tc` |
-| `tcpdump` | Захват сетевого трафика |
-| `traceroute` | Трассировка маршрута |
+| `tcpdump` | Network traffic capture |
+| `traceroute` | Route tracing |
 
-### Обработка данных
+### Data Processing
 
-| Пакет | Назначение |
-|-------|-----------|
-| `jq` | Парсинг JSON |
-| `yq` (Go binary) | Парсинг YAML/JSON/XML/CSV/TOML |
-| `ripgrep` | `rg` — быстрый поиск по содержимому файлов |
-| `python3-pip` | Менеджер Python-пакетов |
+| Package | Purpose |
+|---------|---------|
+| `jq` | JSON parsing |
+| `yq` (Go binary) | YAML/JSON/XML/CSV/TOML processing |
+| `ripgrep` | `rg` — fast content search |
+| `python3-pip` | Python package manager |
 
-### Системные утилиты
+### System Utilities
 
-| Пакет | Назначение |
-|-------|-----------|
-| `strace` | Трассировка системных вызовов |
+| Package | Purpose |
+|---------|---------|
+| `strace` | System call tracing |
 | `psmisc` | `killall`, `pstree`, `fuser` |
-| `htop` | Мониторинг процессов |
-| `nano`, `vim-tiny` | Текстовые редакторы |
-| `unzip`, `zip` | Архивы |
-| `wget` | Загрузка файлов |
+| `htop` | Process monitoring |
+| `nano`, `vim-tiny` | Text editors |
+| `unzip`, `zip` | Archives |
+| `wget` | File downloads |
 
 ---
 
-## Установка на Unraid
+## Installation on Unraid
 
-### Предварительные требования
+### Prerequisites
 
 - Unraid 6.x+
-- Включённый Docker (Settings → Docker → Enable Docker: Yes)
-- Для приватного образа: доступ к терминалу Unraid для `docker login`
+- Docker enabled (Settings → Docker → Enable Docker: Yes)
+- For private images: Unraid terminal access for `docker login`
 
-### Шаг 1. Открыть Docker tab
+### Step 1. Open Docker tab
 
-В WebGUI перейдите на вкладку **Docker** и нажмите **Add Container** (внизу страницы).
+In the WebGUI, go to the **Docker** tab and click **Add Container** (bottom of the page).
 
-### Шаг 2. Базовые настройки
+### Step 2. Basic settings
 
-| Поле | Значение |
-|------|---------|
+| Field | Value |
+|-------|-------|
 | **Name** | `openclaw` |
 | **Repository** | `ghcr.io/sers88/openclawfull:latest` |
 | **Network Type** | `Bridge` |
 
-### Шаг 3. Port Mappings
+### Step 3. Port Mappings
 
 | Host Port | Container Port | Protocol |
 |-----------|---------------|----------|
 | `18789` | `18789` | TCP |
 | `18790` | `18790` | TCP |
 
-### Шаг 4. Volume Mappings
+### Step 4. Volume Mappings
 
 | Host Path | Container Path | Access Mode |
 |-----------|---------------|-------------|
@@ -99,98 +101,98 @@
 | `/mnt/user/appdata/openclaw/workspace` | `/home/node/.openclaw/workspace` | Read/Write |
 | `/mnt/user/appdata/openclaw-auth-profile-secrets` | `/home/node/.config/openclaw` | Read/Write |
 
-> Host-пути создаются автоматически при первом запуске. Рекомендуется расположить `appdata` на cache pool.
+> Host paths are created automatically on first start. It is recommended to place `appdata` on a cache pool.
 
-### Шаг 5. Environment Variables
+### Step 5. Environment Variables
 
-Нажмите **Add another Path, Port, Variable, Label or Device** и добавьте переменные:
+Click **Add another Path, Port, Variable, Label or Device** and add the following variables:
 
-| Variable Name | Value | Описание |
-|---------------|-------|----------|
-| `HOME` | `/home/node` | Домашняя директория |
-| `OPENCLAW_HOME` | `/home/node` | Корень OpenClaw |
-| `TERM` | `xterm-256color` | Терминал |
-| `OPENCLAW_STATE_DIR` | `/home/node/.openclaw` | Директория состояния |
-| `OPENCLAW_CONFIG_PATH` | `/home/node/.openclaw/openclaw.json` | Путь к конфигу |
-| `OPENCLAW_CONFIG_DIR` | `/home/node/.openclaw` | Директория конфигов |
-| `OPENCLAW_WORKSPACE_DIR` | `/home/node/.openclaw/workspace` | Workspace |
-| `OPENCLAW_GATEWAY_BIND` | `lan` | Привязка к 0.0.0.0 (доступ из LAN) |
-| `OPENCLAW_GATEWAY_TOKEN` | *ваш-токен* | Токен авторизации gateway |
-| `TZ` | `Europe/Moscow` | Часовой пояс |
+| Variable Name | Value | Description |
+|---------------|-------|-------------|
+| `HOME` | `/home/node` | Home directory |
+| `OPENCLAW_HOME` | `/home/node` | OpenClaw root |
+| `TERM` | `xterm-256color` | Terminal type |
+| `OPENCLAW_STATE_DIR` | `/home/node/.openclaw` | State directory |
+| `OPENCLAW_CONFIG_PATH` | `/home/node/.openclaw/openclaw.json` | Config file path |
+| `OPENCLAW_CONFIG_DIR` | `/home/node/.openclaw` | Config directory |
+| `OPENCLAW_WORKSPACE_DIR` | `/home/node/.openclaw/workspace` | Workspace directory |
+| `OPENCLAW_GATEWAY_BIND` | `lan` | Bind to 0.0.0.0 (LAN access) |
+| `OPENCLAW_GATEWAY_TOKEN` | *your-token* | Gateway auth token |
+| `TZ` | `Europe/Moscow` | Timezone |
 
-### Шаг 6. Extra Parameters
+### Step 6. Extra Parameters
 
-В поле **Extra Parameters** (видно в Advanced View) добавьте:
+In the **Extra Parameters** field (visible in Advanced View), add:
 
 ```
 --init --cap-drop=NET_ADMIN --security-opt=no-new-privileges=true
 ```
 
-Это включает:
-- `--init` — tini как PID 1 (корректная обработка сигналов)
-- `--cap-drop=NET_ADMIN` — снижение привилегий (безопасность)
-- `--security-opt=no-new-privileges=true` — запрет повышения привилегий
+This enables:
+- `--init` — tini as PID 1 (proper signal handling)
+- `--cap-drop=NET_ADMIN` — reduced privileges (security)
+- `--security-opt=no-new-privileges=true` — prevent privilege escalation
 
-> **Важно:** `NET_RAW` **не** удаляется из capabilities, чтобы работали `ping`, `nmap`, `tcpdump`, `traceroute`.
+> **Important:** `NET_RAW` is **not** dropped so that `ping`, `nmap`, `tcpdump`, and `traceroute` work correctly.
 
-### Шаг 7. Создание контейнера
+### Step 7. Create the container
 
-1. Нажмите **Apply** / **Create**
-2. Дождитесь скачивания образа (первый раз ~500 MB)
-3. После завершения нажмите **Done**
+1. Click **Apply** / **Create**
+2. Wait for the image to download (~500 MB on first pull)
+3. Once finished, click **Done**
 
-### Шаг 8. Включить автозапуск
+### Step 8. Enable auto-start
 
-На вкладке **Docker** переключите **Auto-Start** в положение **ON** для контейнера `openclaw`.
+On the **Docker** tab, toggle **Auto-Start** to **ON** for the `openclaw` container.
 
 ---
 
-## Проверка установки
+## Verify installation
 
-Нажмите на иконку контейнера → **Console** и выполните:
+Click the container icon → **Console** and run:
 
 ```bash
-# Проверка gateway
+# Check gateway
 curl -s http://127.0.0.1:18789/healthz
 
-# Проверка сетевых утилит
+# Check network tools
 ping -c 2 google.com
 nc -zv google.com 443
 dig google.com
 ip addr show
 
-# Проверка обработки данных
+# Check data tools
 echo '{"test":1}' | jq .
 echo 'key: value' | yq .
 echo "hello world" | rg "hello"
 
-# Проверка SSH
+# Check SSH
 ssh -V
 
-# Проверка Python
+# Check Python
 python3 -m pip show paramiko
 
-# Проверка системных утилит
+# Check system tools
 htop --version
 strace --version
 ```
 
 ---
 
-## Обновление образа
+## Updating the image
 
-### На Unraid
+### On Unraid
 
-1. Остановите контейнер: иконка → **Stop**
-2. Удалите контейнер: иконка → **Remove** (выберите *только контейнер*, **не** удаляйте образ)
-3. Откройте терминал Unraid и выполните:
+1. Stop the container: icon → **Stop**
+2. Remove the container: icon → **Remove** (select *container only*, do **not** remove the image)
+3. Open the Unraid terminal and run:
    ```bash
    docker pull ghcr.io/sers88/openclawfull:latest
    ```
-4. Перейдите на вкладку **Docker** → выберите контейнер из списка **Previous Containers** внизу страницы
-5. Нажмите **Install** — настройки сохранятся из шаблона
+4. Go to the **Docker** tab → select the container from **Previous Containers** at the bottom
+5. Click **Install** — settings will be restored from the saved template
 
-### Альтернативный способ (через терминал Unraid)
+### Alternative (via Unraid terminal)
 
 ```bash
 docker stop openclaw
@@ -198,33 +200,33 @@ docker rm openclaw
 docker pull ghcr.io/sers88/openclawfull:latest
 ```
 
-Затем пересоздайте контейнер через WebGUI из Previous Containers.
+Then recreate the container via WebGUI from Previous Containers.
 
 ---
 
-## Приватный реестр (если образ приватный)
+## Private registry (if the image is private)
 
-Если GHCR-репозиторий приватный, выполните на терминале Unraid:
+If the GHCR repository is private, run on the Unraid terminal:
 
 ```bash
 docker login ghcr.io -u sers88
 ```
 
-В качестве пароля используйте GitHub Personal Access Token (PAT) с правом `read:packages`.
+Use a GitHub Personal Access Token (PAT) with `read:packages` scope as the password.
 
 ---
 
-## Установка через Docker Compose (не Unraid)
+## Docker Compose installation (non-Unraid)
 
-Для обычных серверов с Docker Compose:
+For servers with Docker Compose:
 
 ```bash
 cp .env.example .env
-# Отредактируйте .env: укажите OPENCLAW_GATEWAY_TOKEN, TZ и т.д.
+# Edit .env: set OPENCLAW_GATEWAY_TOKEN, TZ, etc.
 docker compose up -d --build
 ```
 
-Или с готовым образом из GHCR:
+Or with the pre-built image from GHCR:
 
 ```bash
 docker compose up -d
@@ -234,18 +236,18 @@ docker compose up -d
 
 ## CI/CD
 
-Образ автоматически собирается и публикуется через GitHub Actions:
+The image is automatically built and published via GitHub Actions:
 
-- **Push в `main`** → сборка и пуш тега `latest`
-- **Тег `v*`** → сборка и пуш с версией (например `v1.0.0`)
-- **Платформы:** `linux/amd64`, `linux/arm64`
+- **Push to `main`** → build and push `latest` tag
+- **Tag `v*`** → build and push versioned tag (e.g. `v1.0.0`)
+- **Platforms:** `linux/amd64`, `linux/arm64`
 - **Registry:** `ghcr.io/sers88/openclawfull`
 
 ---
 
-## Ссылки
+## Links
 
-- [OpenClaw — официальный проект](https://github.com/openclaw/openclaw)
-- [Документация OpenClaw](https://docs.openclaw.ai)
-- [Базовый образ на GHCR](https://github.com/openclaw/openclaw/pkgs/container/openclaw)
-- [Документация Unraid Docker](https://docs.unraid.net/unraid-os/using-unraid-to/run-docker-containers/overview/)
+- [OpenClaw — official project](https://github.com/openclaw/openclaw)
+- [OpenClaw documentation](https://docs.openclaw.ai)
+- [Base image on GHCR](https://github.com/openclaw/openclaw/pkgs/container/openclaw)
+- [Unraid Docker documentation](https://docs.unraid.net/unraid-os/using-unraid-to/run-docker-containers/overview/)
