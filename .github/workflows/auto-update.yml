@@ -1,0 +1,82 @@
+name: Auto-update base image
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  BASE_IMAGE: ghcr.io/openclaw/openclaw:latest
+  DIGEST_FILE: .openclaw-base-digest
+
+jobs:
+  check-and-rebuild:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Pull base image and get digest
+        id: base
+        run: |
+          docker pull "${{ env.BASE_IMAGE }}"
+          NEW_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "${{ env.BASE_IMAGE }}" | cut -d'@' -f2)
+          echo "digest=${NEW_DIGEST}" >> "$GITHUB_OUTPUT"
+
+          OLD_DIGEST=$(cat "${{ env.DIGEST_FILE }}" 2>/dev/null || echo "none")
+          echo "old=${OLD_DIGEST}" >> "$GITHUB_OUTPUT"
+
+          if [ "${NEW_DIGEST}" = "${OLD_DIGEST}" ]; then
+            echo "updated=false" >> "$GITHUB_OUTPUT"
+            echo "No base image update detected. Skipping rebuild."
+          else
+            echo "updated=true" >> "$GITHUB_OUTPUT"
+            echo "Base image updated: ${OLD_DIGEST} -> ${NEW_DIGEST}"
+          fi
+
+      - name: Generate date tag
+        if: steps.base.outputs.updated == 'true'
+        id: datetag
+        run: |
+          DATE_TAG=$(date -u +'%Y.%m.%d-%H.%M')
+          echo "tag=${DATE_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push updated image
+        if: steps.base.outputs.updated == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.datetag.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Update digest file and commit
+        if: steps.base.outputs.updated == 'true'
+        run: |
+          echo "${{ steps.base.outputs.digest }}" > "${{ env.DIGEST_FILE }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "${{ env.DIGEST_FILE }}"
+          git commit -m "chore: update base image digest to ${{ steps.base.outputs.digest }}"
+          git push
