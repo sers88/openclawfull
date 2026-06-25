@@ -234,6 +234,27 @@ docker compose up -d
 
 ---
 
+## Tests
+
+A POSIX shell smoke suite in `tests/smoke.sh` verifies the built image:
+
+- runs as non-root (`uid 1000`)
+- entrypoint `openclaw.mjs` is present and executable
+- pinned tools report the expected versions (`yq`, `himalaya`, `paramiko`)
+- gateway `/healthz` returns `{"ok":true}`
+
+Expected versions are parsed from the `Dockerfile`, so the assertions stay in sync with the pinned `ARG`s.
+
+Run locally (requires Docker):
+
+```bash
+bash tests/smoke.sh
+```
+
+CI runs the suite on every pull request and push to `main` — see `.github/workflows/test.yml`.
+
+---
+
 ## CI/CD
 
 The image is automatically built and published via GitHub Actions:
