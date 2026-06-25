@@ -13,13 +13,14 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-No package manager, no test suite, no linter, no typecheck. The only verification is whether the image builds and the container starts healthy.
+No package manager, no linter, no typecheck. Verification is a POSIX shell smoke suite in `tests/smoke.sh` (run with `bash tests/smoke.sh`): it asserts the image runs as non-root, the pinned tools (`yq`, `himalaya`, `paramiko`) report the expected versions, and the gateway `/healthz` is green. Expected versions are parsed from the `Dockerfile` ARGs.
 
 ## CI
 
 - **`.github/workflows/build.yml`** — builds multi-arch (`linux/amd64`, `linux/arm64`) and pushes to `ghcr.io/sers88/openclawfull`
 - Push to `main` → `latest` tag; push `v*` tag → versioned tags
 - Uses GHA cache (`cache-from: type=gha`)
+- **`.github/workflows/test.yml`** — runs `tests/smoke.sh` on every pull request and push to `main` (gates PRs before merge; builds the image locally with `load: true`, no push)
 
 ## Key conventions
 
@@ -27,7 +28,7 @@ No package manager, no test suite, no linter, no typecheck. The only verificatio
 - `NET_ADMIN` is dropped; `NET_RAW` is intentionally kept so `ping`, `nmap`, `tcpdump`, `traceroute` work.
 - `yq` version is pinned via `ARG YQ_VERSION` — update the arg to upgrade.
 - `paramiko` requires `--break-system-packages` pip flag (Debian bookworm+).
-- `.dockerignore` excludes `.md`, `.env.*`, `.git`, `.github`, `LICENSE` from the build context.
+- `.dockerignore` excludes `.md`, `.env.*`, `.git`, `.github`, `tests`, `LICENSE` from the build context.
 - `docker-compose.yml` defines two services: `openclaw-gateway` (server, port 18789/18790) and `openclaw-cli` (interactive shell). The CLI service shares the gateway's network.
 
 ## Healthcheck

@@ -232,6 +232,27 @@ docker compose up -d
 
 ---
 
+## Тесты
+
+Smoke-сьют в POSIX shell (`tests/smoke.sh`) проверяет собранный образ:
+
+- запускается не под root (`uid 1000`)
+- точка входа `openclaw.mjs` на месте и исполняемая
+- пиннованные тулы отдают ожидаемые версии (`yq`, `himalaya`, `paramiko`)
+- gateway `/healthz` возвращает `{"ok":true}`
+
+Ожидаемые версии парсятся из `Dockerfile`, поэтому assertion'ы не рассинхронизируются с пинами `ARG`.
+
+Локальный запуск (нужен Docker):
+
+```bash
+bash tests/smoke.sh
+```
+
+В CI сьют гоняется на каждый pull request и push в `main` — см. `.github/workflows/test.yml`.
+
+---
+
 ## CI/CD
 
 Образ автоматически собирается и публикуется через GitHub Actions:
