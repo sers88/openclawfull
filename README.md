@@ -64,6 +64,22 @@ Published on GitHub Container Registry: `ghcr.io/sers88/openclawfull`
 | `unzip`, `zip` | Archives |
 | `wget` | File downloads |
 
+### Email
+
+| Package | Purpose |
+|---------|---------|
+| `himalaya` (binary) | CLI IMAP/SMTP email client |
+
+---
+
+## How the container runs
+
+- The image's default user is **`node` (uid 1000)** — `docker run` without compose runs as `node`.
+- The Docker Compose services start as **root** (`user: "0:0"`) with an entrypoint (`/usr/local/bin/openclaw-full-entrypoint.sh`) that fixes ownership of the bind-mounted config/state directories (`/home/node/.openclaw`, `/home/node/.config/openclaw`), then drops privileges back to **`node`** via `gosu`. So with compose, **no manual `chown` is needed** — the gateway can write its state on any host (Linux / Unraid / Windows).
+- `cap_drop: [NET_ADMIN]` and `no-new-privileges:true` still apply; the long-running openclaw process runs as `node`.
+
+> A raw `docker run` (e.g. the Unraid template below, which does not use compose) runs as `node`, so the bind-mounted host directory must be writable by uid 1000 — see the note in Step 4.
+
 ---
 
 ## Installation on Unraid
@@ -102,6 +118,12 @@ In the WebGUI, go to the **Docker** tab and click **Add Container** (bottom of t
 | `/mnt/user/appdata/openclaw-auth-profile-secrets` | `/home/node/.config/openclaw` | Read/Write |
 
 > Host paths are created automatically on first start. It is recommended to place `appdata` on a cache pool.
+>
+> **Ownership:** the Unraid template runs the container as `node` (uid 1000), but `appdata` directories are normally owned by `nobody:users`. Before the first start, fix ownership once on the Unraid terminal:
+> ```bash
+> chown -R 1000:1000 /mnt/user/appdata/openclaw /mnt/user/appdata/openclaw-auth-profile-secrets
+> ```
+> (Using Docker Compose instead? Ownership is fixed automatically on every start.)
 
 ### Step 5. Environment Variables
 
@@ -172,6 +194,9 @@ ssh -V
 # Check Python
 python3 -m pip show paramiko
 
+# Check email
+himalaya --version
+
 # Check system tools
 htop --version
 strace --version
@@ -231,6 +256,8 @@ Or with the pre-built image from GHCR:
 ```bash
 docker compose up -d
 ```
+
+> Compose starts the services as root to fix bind-mount ownership, then drops to `node` via `gosu` — no manual `chown` is required.
 
 ---
 

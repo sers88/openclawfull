@@ -62,6 +62,22 @@
 | `unzip`, `zip` | Архивы |
 | `wget` | Загрузка файлов |
 
+### Электронная почта
+
+| Пакет | Назначение |
+|-------|-----------|
+| `himalaya` (binary) | CLI IMAP/SMTP почтовый клиент |
+
+---
+
+## Как запускается контейнер
+
+- Пользователь образа по умолчанию — **`node` (uid 1000)**; `docker run` без compose запускается под `node`.
+- Сервисы в `docker-compose.yml` стартуют от **root** (`user: "0:0"`) с entrypoint (`/usr/local/bin/openclaw-full-entrypoint.sh`), который чинит права на примонтированные config/state-директории (`/home/node/.openclaw`, `/home/node/.config/openclaw`), затем дропается до **`node`** через `gosu`. Поэтому с compose **ручной `chown` не нужен** — gateway может писать состояние на любом хосте (Linux / Unraid / Windows).
+- `cap_drop: [NET_ADMIN]` и `no-new-privileges:true` остаются в силе; сам openclaw работает под `node`.
+
+> Обычный `docker run` (например, шаблон Unraid ниже, без compose) запускается под `node`, поэтому примонтированная директория должна быть доступна на запись uid 1000 — см. примечание в Шаге 4.
+
 ---
 
 ## Установка на Unraid
@@ -100,6 +116,12 @@
 | `/mnt/user/appdata/openclaw-auth-profile-secrets` | `/home/node/.config/openclaw` | Read/Write |
 
 > Host-пути создаются автоматически при первом запуске. Рекомендуется расположить `appdata` на cache pool.
+>
+> **Права:** шаблон Unraid запускает контейнер под `node` (uid 1000), но директории `appdata` обычно принадлежат `nobody:users`. Перед первым запуском один раз исправьте владельца в терминале Unraid:
+> ```bash
+> chown -R 1000:1000 /mnt/user/appdata/openclaw /mnt/user/appdata/openclaw-auth-profile-secrets
+> ```
+> (Используете Docker Compose? Права чинятся автоматически при каждом старте.)
 
 ### Шаг 5. Environment Variables
 
@@ -170,6 +192,9 @@ ssh -V
 # Проверка Python
 python3 -m pip show paramiko
 
+# Проверка почты
+himalaya --version
+
 # Проверка системных утилит
 htop --version
 strace --version
@@ -229,6 +254,8 @@ docker compose up -d --build
 ```bash
 docker compose up -d
 ```
+
+> Compose стартует сервисы от root, чинит права на bind-mount'ы и дропается до `node` через `gosu` — ручной `chown` не требуется.
 
 ---
 
