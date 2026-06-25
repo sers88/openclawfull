@@ -9,6 +9,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      gosu \
       openssh-client \
       jq \
       iputils-ping \
@@ -49,7 +50,27 @@ RUN ARCH="$(dpkg --print-architecture)" \
        -o /tmp/himalaya.tgz \
     && tar -xzf /tmp/himalaya.tgz -C /usr/local/bin himalaya \
     && chmod +x /usr/local/bin/himalaya \
-    && rm -f /tmp/himalaya.tgz \
-    && himalaya --version
+     && rm -f /tmp/himalaya.tgz \
+     && himalaya --version
+
+# Entrypoint that fixes ownership of bind-mounted config/state directories
+# when the container is started as root (e.g. via compose `user: 0:0`), then
+# drops privileges to the unprivileged `node` user via gosu. When the container
+# is already running as non-root, it just execs the command unchanged.
+COPY <<'EOF' /usr/local/bin/openclaw-full-entrypoint.sh
+#!/bin/sh
+set -e
+
+if [ "$(id -u)" = "0" ]; then
+  for d in /home/node/.openclaw /home/node/.config/openclaw; do
+    mkdir -p "$d"
+    chown -R node:node "$d"
+  done
+  exec gosu node "$@"
+fi
+
+exec "$@"
+EOF
+RUN sed -i 's/\r$//' /usr/local/bin/openclaw-full-entrypoint.sh && chmod 755 /usr/local/bin/openclaw-full-entrypoint.sh
 
 USER node

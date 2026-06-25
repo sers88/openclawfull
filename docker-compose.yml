@@ -45,6 +45,8 @@ services:
       - "${OPENCLAW_BRIDGE_PORT:-18790}:18790"
     init: true
     restart: unless-stopped
+    user: "0:0"
+    entrypoint: ["/usr/local/bin/openclaw-full-entrypoint.sh"]
     command:
       - sh
       - -c
@@ -98,9 +100,11 @@ services:
       - ${OPENCLAW_CONFIG_DIR:-${HOME:-/tmp}/.openclaw}:/home/node/.openclaw
       - ${OPENCLAW_WORKSPACE_DIR:-${HOME:-/tmp}/.openclaw/workspace}:/home/node/.openclaw/workspace
       - ${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME:-/tmp}/.openclaw-auth-profile-secrets}:/home/node/.config/openclaw
+    user: "0:0"
     stdin_open: true
     tty: true
     init: true
-    entrypoint: ["node", "openclaw.mjs"]
+    entrypoint: ["/usr/local/bin/openclaw-full-entrypoint.sh"]
+    command: ["node", "openclaw.mjs"]
     depends_on:
       - openclaw-gateway
